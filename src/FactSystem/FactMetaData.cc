@@ -1004,7 +1004,7 @@ void FactMetaData::_setAppSettingsTranslators(void)
     }
 }
 
-const FactMetaData::AppSettingsTranslation_s* FactMetaData::_findAppSettingsHorizontalDistanceUnitsTranslation(const QString& rawUnits)
+const FactMetaData::AppSettingsTranslation_s* FactMetaData::_findAppSettingsUnitsTranslation(const QString& rawUnits, UnitTypes type)
 {
     for (size_t i=0; i<sizeof(_rgAppSettingsTranslations)/sizeof(_rgAppSettingsTranslations[0]); i++) {
         const AppSettingsTranslation_s* pAppSettingsTranslation = &_rgAppSettingsTranslations[i];
@@ -1013,67 +1013,31 @@ const FactMetaData::AppSettingsTranslation_s* FactMetaData::_findAppSettingsHori
             continue;
         }
 
-        uint settingsUnits = qgcApp()->toolbox()->settingsManager()->unitsSettings()->horizontalDistanceUnits()->rawValue().toUInt();
-
-        if (pAppSettingsTranslation->unitType == UnitHorizontalDistance
-                && pAppSettingsTranslation->unitOption == settingsUnits) {
-            return pAppSettingsTranslation;
-        }
-    }
-    return nullptr;
-}
-
-const FactMetaData::AppSettingsTranslation_s* FactMetaData::_findAppSettingsVerticalDistanceUnitsTranslation(const QString& rawUnits)
-{
-    for (size_t i=0; i<sizeof(_rgAppSettingsTranslations)/sizeof(_rgAppSettingsTranslations[0]); i++) {
-        const AppSettingsTranslation_s* pAppSettingsTranslation = &_rgAppSettingsTranslations[i];
-
-        if (rawUnits.toLower() != pAppSettingsTranslation->rawUnits.toLower()) {
-            continue;
-        }
-
-        uint settingsUnits = qgcApp()->toolbox()->settingsManager()->unitsSettings()->verticalDistanceUnits()->rawValue().toUInt();
-
-        if (pAppSettingsTranslation->unitType == UnitVerticalDistance
-                && pAppSettingsTranslation->unitOption == settingsUnits) {
-            return pAppSettingsTranslation;
-        }
-    }
-    return nullptr;
-}
-
-const FactMetaData::AppSettingsTranslation_s* FactMetaData::_findAppSettingsWeightUnitsTranslation(const QString& rawUnits)
-{
-    for (size_t i=0; i<sizeof(_rgAppSettingsTranslations)/sizeof(_rgAppSettingsTranslations[0]); i++) {
-        const AppSettingsTranslation_s* pAppSettingsTranslation = &_rgAppSettingsTranslations[i];
-
-        if (rawUnits.toLower() != pAppSettingsTranslation->rawUnits.toLower()) {
-            continue;
+        uint unitOption = 0;
+        auto unitsSettings = qgcApp()->toolbox()->settingsManager()->unitsSettings();
+        switch (type) {
+        case UnitHorizontalDistance:
+            unitOption = unitsSettings->horizontalDistanceUnits()->rawValue().toUInt();
+            break;
+        case UnitVerticalDistance:
+            unitOption = unitsSettings->verticalDistanceUnits()->rawValue().toUInt();
+            break;
+        case UnitArea:
+            unitOption = unitsSettings->areaUnits()->rawValue().toUInt();
+            break;
+        case UnitSpeed:
+            unitOption = unitsSettings->speedUnits()->rawValue().toUInt();
+            break;
+        case UnitTemperature:
+            unitOption = unitsSettings->temperatureUnits()->rawValue().toUInt();
+            break;
+        case UnitWeight:
+            unitOption = unitsSettings->weightUnits()->rawValue().toUInt();
+            break;
         }
 
-        uint settingsUnits = qgcApp()->toolbox()->settingsManager()->unitsSettings()->weightUnits()->rawValue().toUInt();
-
-        if (pAppSettingsTranslation->unitType == UnitWeight
-                && pAppSettingsTranslation->unitOption == settingsUnits) {
-            return pAppSettingsTranslation;
-        }
-    }
-    return nullptr;
-}
-
-const FactMetaData::AppSettingsTranslation_s* FactMetaData::_findAppSettingsAreaUnitsTranslation(const QString& rawUnits)
-{
-    for (size_t i=0; i<sizeof(_rgAppSettingsTranslations)/sizeof(_rgAppSettingsTranslations[0]); i++) {
-        const AppSettingsTranslation_s* pAppSettingsTranslation = &_rgAppSettingsTranslations[i];
-
-        if (rawUnits.toLower() != pAppSettingsTranslation->rawUnits.toLower()) {
-            continue;
-        }
-
-        uint settingsUnits = qgcApp()->toolbox()->settingsManager()->unitsSettings()->areaUnits()->rawValue().toUInt();
-
-        if (pAppSettingsTranslation->unitType == UnitArea
-                && pAppSettingsTranslation->unitOption == settingsUnits) {
+        if (pAppSettingsTranslation->unitType == type
+                && pAppSettingsTranslation->unitOption == unitOption) {
             return pAppSettingsTranslation;
         }
     }
@@ -1083,7 +1047,7 @@ const FactMetaData::AppSettingsTranslation_s* FactMetaData::_findAppSettingsArea
 
 QVariant FactMetaData::metersToAppSettingsHorizontalDistanceUnits(const QVariant& meters)
 {
-    const AppSettingsTranslation_s* pAppSettingsTranslation = _findAppSettingsHorizontalDistanceUnitsTranslation("m");
+    const AppSettingsTranslation_s* pAppSettingsTranslation = _findAppSettingsUnitsTranslation("m", UnitHorizontalDistance);
     if (pAppSettingsTranslation) {
         return pAppSettingsTranslation->rawTranslator(meters);
     } else {
@@ -1093,7 +1057,7 @@ QVariant FactMetaData::metersToAppSettingsHorizontalDistanceUnits(const QVariant
 
 QVariant FactMetaData::metersToAppSettingsVerticalDistanceUnits(const QVariant& meters)
 {
-    const AppSettingsTranslation_s* pAppSettingsTranslation = _findAppSettingsVerticalDistanceUnitsTranslation("vertical m");
+    const AppSettingsTranslation_s* pAppSettingsTranslation = _findAppSettingsUnitsTranslation("vertical m", UnitVerticalDistance);
     if (pAppSettingsTranslation) {
         return pAppSettingsTranslation->rawTranslator(meters);
     } else {
@@ -1103,7 +1067,7 @@ QVariant FactMetaData::metersToAppSettingsVerticalDistanceUnits(const QVariant& 
 
 QVariant FactMetaData::appSettingsHorizontalDistanceUnitsToMeters(const QVariant& distance)
 {
-    const AppSettingsTranslation_s* pAppSettingsTranslation = _findAppSettingsHorizontalDistanceUnitsTranslation("m");
+    const AppSettingsTranslation_s* pAppSettingsTranslation = _findAppSettingsUnitsTranslation("m", UnitHorizontalDistance);
     if (pAppSettingsTranslation) {
         return pAppSettingsTranslation->cookedTranslator(distance);
     } else {
@@ -1113,7 +1077,7 @@ QVariant FactMetaData::appSettingsHorizontalDistanceUnitsToMeters(const QVariant
 
 QVariant FactMetaData::appSettingsVerticalDistanceUnitsToMeters(const QVariant& distance)
 {
-    const AppSettingsTranslation_s* pAppSettingsTranslation = _findAppSettingsVerticalDistanceUnitsTranslation("alt m");
+    const AppSettingsTranslation_s* pAppSettingsTranslation = _findAppSettingsUnitsTranslation("vertical m", UnitVerticalDistance);
     if (pAppSettingsTranslation) {
         return pAppSettingsTranslation->cookedTranslator(distance);
     } else {
@@ -1123,7 +1087,7 @@ QVariant FactMetaData::appSettingsVerticalDistanceUnitsToMeters(const QVariant& 
 
 QString FactMetaData::appSettingsHorizontalDistanceUnitsString(void)
 {
-    const AppSettingsTranslation_s* pAppSettingsTranslation = _findAppSettingsHorizontalDistanceUnitsTranslation("m");
+    const AppSettingsTranslation_s* pAppSettingsTranslation = _findAppSettingsUnitsTranslation("m", UnitHorizontalDistance);
     if (pAppSettingsTranslation) {
         return pAppSettingsTranslation->cookedUnits;
     } else {
@@ -1133,7 +1097,7 @@ QString FactMetaData::appSettingsHorizontalDistanceUnitsString(void)
 
 QString FactMetaData::appSettingsVerticalDistanceUnitsString(void)
 {
-    const AppSettingsTranslation_s* pAppSettingsTranslation = _findAppSettingsVerticalDistanceUnitsTranslation("alt m");
+    const AppSettingsTranslation_s* pAppSettingsTranslation = _findAppSettingsUnitsTranslation("vertical m", UnitVerticalDistance);
     if (pAppSettingsTranslation) {
         return pAppSettingsTranslation->cookedUnits;
     } else {
@@ -1143,7 +1107,7 @@ QString FactMetaData::appSettingsVerticalDistanceUnitsString(void)
 
 QString FactMetaData::appSettingsWeightUnitsString(void)
 {
-    const AppSettingsTranslation_s* pAppSettingsTranslation = _findAppSettingsWeightUnitsTranslation("g");
+    const AppSettingsTranslation_s* pAppSettingsTranslation = _findAppSettingsUnitsTranslation("g", UnitWeight);
     if (pAppSettingsTranslation) {
         return pAppSettingsTranslation->cookedUnits;
     } else {
@@ -1153,7 +1117,7 @@ QString FactMetaData::appSettingsWeightUnitsString(void)
 
 QVariant FactMetaData::squareMetersToAppSettingsAreaUnits(const QVariant& squareMeters)
 {
-    const AppSettingsTranslation_s* pAppSettingsTranslation = _findAppSettingsAreaUnitsTranslation("m^2");
+    const AppSettingsTranslation_s* pAppSettingsTranslation = _findAppSettingsUnitsTranslation("m^2", UnitArea);
     if (pAppSettingsTranslation) {
         return pAppSettingsTranslation->rawTranslator(squareMeters);
     } else {
@@ -1163,7 +1127,7 @@ QVariant FactMetaData::squareMetersToAppSettingsAreaUnits(const QVariant& square
 
 QVariant FactMetaData::appSettingsAreaUnitsToSquareMeters(const QVariant& area)
 {
-    const AppSettingsTranslation_s* pAppSettingsTranslation = _findAppSettingsAreaUnitsTranslation("m^2");
+    const AppSettingsTranslation_s* pAppSettingsTranslation = _findAppSettingsUnitsTranslation("m^2", UnitArea);
     if (pAppSettingsTranslation) {
         return pAppSettingsTranslation->cookedTranslator(area);
     } else {
@@ -1173,7 +1137,7 @@ QVariant FactMetaData::appSettingsAreaUnitsToSquareMeters(const QVariant& area)
 
 QString FactMetaData::appSettingsAreaUnitsString(void)
 {
-    const AppSettingsTranslation_s* pAppSettingsTranslation = _findAppSettingsAreaUnitsTranslation("m^2");
+    const AppSettingsTranslation_s* pAppSettingsTranslation = _findAppSettingsUnitsTranslation("m^2", UnitArea);
     if (pAppSettingsTranslation) {
         return pAppSettingsTranslation->cookedUnits;
     } else {
@@ -1182,7 +1146,7 @@ QString FactMetaData::appSettingsAreaUnitsString(void)
 }
 
 QVariant FactMetaData::gramsToAppSettingsWeightUnits(const QVariant& grams) {
-    const AppSettingsTranslation_s* pAppSettingsTranslation = _findAppSettingsWeightUnitsTranslation("g");
+    const AppSettingsTranslation_s* pAppSettingsTranslation = _findAppSettingsUnitsTranslation("g", UnitWeight);
     if (pAppSettingsTranslation) {
         return pAppSettingsTranslation->rawTranslator(grams);
     } else {
@@ -1191,7 +1155,7 @@ QVariant FactMetaData::gramsToAppSettingsWeightUnits(const QVariant& grams) {
 }
 
 QVariant FactMetaData::appSettingsWeightUnitsToGrams(const QVariant& weight) {
-    const AppSettingsTranslation_s* pAppSettingsTranslation = _findAppSettingsWeightUnitsTranslation("g");
+    const AppSettingsTranslation_s* pAppSettingsTranslation = _findAppSettingsUnitsTranslation("g", UnitWeight);
     if (pAppSettingsTranslation) {
         return pAppSettingsTranslation->cookedTranslator(weight);
     } else {
@@ -1199,6 +1163,15 @@ QVariant FactMetaData::appSettingsWeightUnitsToGrams(const QVariant& weight) {
     }
 }
 
+QString FactMetaData::appSettingsSpeedUnitsString()
+{
+    const AppSettingsTranslation_s* pAppSettingsTranslation = _findAppSettingsUnitsTranslation("m/s", UnitSpeed);
+    if (pAppSettingsTranslation) {
+        return pAppSettingsTranslation->cookedUnits;
+    } else {
+        return QStringLiteral("m/s");
+    }
+}
 
 double FactMetaData::cookedIncrement(void) const
 {
